@@ -28,24 +28,39 @@ resource "azurerm_network_interface" "vm_network_interface" {
     name                          = "ipconfig1"
     subnet_id                     = module.vm_network.subnet_id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.terraform_public_ip[count.index].id
+#public_ip_address_id          = azurerm_public_ip.terraform_public_ip[count.index].id
   }
 }
 
-# Create public IP address
 
 resource "azurerm_public_ip" "terraform_public_ip" {
-  count               = var.vm_instance_count
-  name                = "${local.vm_name}${count.index + 1}"
+  # Create public IP address
+/*count               = var.vm_instance_count
+  name                = "${local.vm_name}${count.index + 1}"*/
+  name                = "tf_public_ip"
   location            = azurerm_resource_group.vm_group.location
   resource_group_name = azurerm_resource_group.vm_group.name
   allocation_method   = "Static"
-  availability_zone   = local.platform_location_az_count > 1 ? (count.index % local.platform_location_az_count) + 1 : null
+  availability_zone   = local.platform_location_az_count > 1 ? "Zone-Redundant" : "No-Zone"
   sku                 = "Standard"
   tags = {
-    environment = "Terraform Demo"
+    environment = "Terraform training"
   }
 }
+
+resource "azurerm_lb" "az_lb" {
+  name                = "TestLoadBalancer"
+  location            = azurerm_resource_group.vm_group.location
+  resource_group_name = azurerm_resource_group.vm_group.name
+  sku                 = "Standard"
+  frontend_ip_configuration {
+    name                 = "PublicIPAddress"
+    public_ip_address_id = azurerm_public_ip.terraform_public_ip.id
+
+
+  }
+}
+
 
 # Create virtual machine
 resource "azurerm_windows_virtual_machine" "virtual_machine" {

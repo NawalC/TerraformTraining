@@ -9,6 +9,7 @@ variable "resource_location" {
   type        = list(string)
   default = [
     "UK South",
+    "North Central US",
     "North Europe"
   ]
 }
